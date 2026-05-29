@@ -1,0 +1,76 @@
+name: CI – BovWeight API (Laravel)
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    name: PHPUnit Tests
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: secret
+          MYSQL_DATABASE: bovweight_testing
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping --silent"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    steps:
+      # 1. Clonar el repositorio
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      # 2. Configurar PHP 8.3 con las extensiones necesarias
+      - name: Configurar PHP 8.3
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+          extensions: mbstring, pdo, pdo_mysql, pdo_sqlite, xml, bcmath, ctype, fileinfo
+          coverage: none
+
+      # 3. Caché de dependencias Composer
+      - name: Cache Composer
+        uses: actions/cache@v4
+        with:
+          path: backend/vendor
+          key: ${{ runner.os }}-composer-${{ hashFiles('backend/composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-composer-
+
+      # 4. Instalar dependencias PHP
+      - name: Instalar dependencias (Composer)
+        working-directory: backend
+        run: composer install --no-interaction --prefer-dist --optimize-autoloader
+
+      # 5. Preparar el archivo .env para pruebas con MySQL
+      - name: Preparar .env de pruebas
+        working-directory: backend
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+          echo "DB_CONNECTION=mysql"    >> .env
+          echo "DB_HOST=127.0.0.1"     >> .env
+          echo "DB_PORT=3306"          >> .env
+          echo "DB_DATABASE=bovweight_testing" >> .env
+          echo "DB_USERNAME=root"      >> .env
+          echo "DB_PASSWORD=secret"    >> .env
+
+      # 6. Ejecutar migraciones en la base de datos de prueba
+      - name: Ejecutar migraciones
+        working-directory: backend
+        run: php artisan migrate --force
+
+      # 7. Correr la suite completa de PHPUnit
+      - name: Ejecutar pruebas PHPUnit
+        working-directory: backend
+        run: php artisan test --stop-on-failure
