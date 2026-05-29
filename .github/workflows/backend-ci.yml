@@ -50,7 +50,7 @@ jobs:
       # 4. Instalar dependencias PHP
       - name: Instalar dependencias (Composer)
         working-directory: backend
-        run: composer install --no-interaction --prefer-dist --optimize-autoloader
+        run: composer update --no-interaction --prefer-dist --optimize-autoloader
 
       # 5. Preparar el archivo .env para pruebas con MySQL
       - name: Preparar .env de pruebas
