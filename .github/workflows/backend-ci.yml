@@ -9,7 +9,7 @@ on:
 jobs:
   test:
     name: PHPUnit Tests
-    runs-on: ubuntu-latesttt 
+    runs-on: ubuntu-latest
 
     services:
       mysql:
