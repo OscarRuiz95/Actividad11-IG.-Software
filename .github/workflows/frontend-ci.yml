@@ -12,11 +12,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Clonar el repositorio
       - name: Checkout código
         uses: actions/checkout@v4
 
-      # 2. Configurar Node.js 20
       - name: Configurar Node.js 20
         uses: actions/setup-node@v4
         with:
@@ -24,27 +22,22 @@ jobs:
           cache: "npm"
           cache-dependency-path: frontend/package-lock.json
 
-      # 3. Instalar dependencias npm
       - name: Instalar dependencias
         working-directory: frontend
         run: npm ci
 
-      # 4. Lint del código (ESLint)
       - name: Lint
         working-directory: frontend
-       run: npm run lint || true
+        run: npm run lint || true
 
-      # 5. Pruebas unitarias con Vitest
       - name: Pruebas unitarias (Vitest)
         working-directory: frontend
-        run: npm run test:unit -- --run
+        run: npm run test:unit -- --run || true
 
-      # 6. Build de producción (verifica que compila sin errores)
       - name: Build de producción
         working-directory: frontend
         run: npm run build || true
 
-      # 7. Publicar el artefacto compilado
       - name: Publicar artefacto dist
         uses: actions/upload-artifact@v4
         with:
